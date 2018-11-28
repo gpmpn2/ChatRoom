@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 import engine.ChatRoom;
+import engine.User;
 
 /**
  * 
@@ -64,18 +65,38 @@ public class ClientConnection implements Runnable {
 				if (scanner.hasNextLine()) {
 					String message = scanner.nextLine();
 					
-					if (message.startsWith("user")) {
-						System.out.println(message.split(" ")[1] + " has logged into the Chat Room.");
-					} else if (message.startsWith("send")) {
+					if (message.startsWith("send")) {
+						String values[] = message.split(" ");
+						String name = values[1];
+						String messageToSend = "";
+						
+						for(int i = 2;i < values.length; i++) {
+							messageToSend = messageToSend.concat((i == 2 ? "" : " ") + values[i]);
+						}
+						
 						for(ClientConnection connection : getChatRoom().getClients()) {
 							PrintWriter messenger = connection.getMessenger();
 							if (messenger != null) {
-								messenger.write(message + "\r\n");
+								messenger.write(name + ": " + messageToSend + "\r\n");
 								messenger.flush();
 							}
 						}
 					} else if (message.startsWith("logout")) {
 						
+					} else if (message.startsWith("newuser")) {
+						String values[] = message.split(" ");
+						String username = values[1];
+						String password = values[2];
+						
+						if (checkNewUser(username)) {
+							User user = new User(username, password);
+							user.save();
+							ChatRoom.validUsers.add(user);
+							System.out.println(message.split(" ")[1] + " has logged into the Chat Room.");
+						} else {
+							PrintWriter messenger = this.getMessenger();
+							messenger.write("[Server] Denied. Account already exists.\r\n");
+						}
 					}
 				}
 			}
@@ -86,5 +107,14 @@ public class ClientConnection implements Runnable {
 		    	scanner.close();
 		    }
 		}
+	}
+	
+	private static boolean checkNewUser(String username) {
+		for(User user : ChatRoom.validUsers) {
+			if (user.getUsername().equalsIgnoreCase(username)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
