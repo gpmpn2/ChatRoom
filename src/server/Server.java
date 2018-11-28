@@ -1,4 +1,4 @@
-package engine;
+package server;
 
 
 import java.io.BufferedReader;
@@ -10,62 +10,51 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import client.ClientConnection;
+import handlers.ServerHandler;
 
 /**
  * 
  * @author Grant Maloney | gpmpn2 | 11/26/18
  *
  */
-public class ChatRoom {
+public class Server {
 	private static final int PORT = 14188;
 	
 	private static final int MAX_CONNECTIONS = 3;
 	
-	private ArrayList<ClientConnection> clients;
+	private ArrayList<ServerHandler> clients;
 	
 	public static ArrayList<User> validUsers = new ArrayList<>();
 	
-	public ArrayList<ClientConnection> getClients() {
+	public ArrayList<ServerHandler> getClients() {
 		return this.clients;
 	}
 	
 	public static void main(String[] args) {
 		loadAllUsers();
-		ChatRoom chatRoom = new ChatRoom();
-		chatRoom.bootUp();
-	}
-	
-	private void bootUp() {
-		clients = new ArrayList<>();
-		ServerSocket mainSocket = null;
+		Server chatRoom = new Server();
 		
 		try {
-			mainSocket = new ServerSocket(PORT);
-			openToConnections(mainSocket);
+			chatRoom.bootUp();
 		} catch (IOException io) {
-			System.out.println("Failed to listen on port: " + PORT);
+			System.err.println("[Error] Port already in use, or failed to bind port.");
 			io.printStackTrace();
 		}
 	}
 	
-	private void openToConnections(ServerSocket mainSocket) {
+	private void bootUp() throws IOException {
+		clients = new ArrayList<>();
+		ServerSocket mainSocket = new ServerSocket(PORT);
 		System.out.println("Chat Room now listening on port: " + PORT);
 		
-		while(true) {
-			try {
-				if (clients.size() < MAX_CONNECTIONS) {
-					System.out.println("SIZE: " + validUsers.size());
-					Socket socket = mainSocket.accept();
-					ClientConnection clientConnection = new ClientConnection(this, socket);
-					Thread thread = new Thread(clientConnection);
-					thread.start();
-					clients.add(clientConnection);
-				}
-			} catch (IOException io) {
-				System.out.println("Failed to accept client on port: " + PORT);
-				io.printStackTrace();
+		try {
+			while(true) {
+				ServerHandler connection = new ServerHandler(mainSocket.accept(), clients.size() + 1);
+				connection.start();
+				clients.add(connection);
 			}
+		} finally {
+			mainSocket.close();
 		}
 	}
 	
@@ -77,8 +66,8 @@ public class ChatRoom {
 				String values[] = len.split("\t");
 				validUsers.add(new User(values[0], values[1]));
 			}
-			System.out.println("Found " + validUsers.size() + " users registered.");
 			br.close();
+			System.out.println("Found " + validUsers.size() + " users registered.");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
