@@ -66,15 +66,16 @@ public class ClientConnection implements Runnable {
 					
 					if (message.startsWith("user")) {
 						System.out.println(message.split(" ")[1] + " has logged into the Chat Room.");
-						continue;
-					}
-					
-					for(ClientConnection connection : getChatRoom().getClients()) {
-						PrintWriter messenger = connection.getMessenger();
-						if (messenger != null) {
-							messenger.write(message + "\r\n");
-							messenger.flush();
+					} else if (message.startsWith("send")) {
+						for(ClientConnection connection : getChatRoom().getClients()) {
+							PrintWriter messenger = connection.getMessenger();
+							if (messenger != null) {
+								messenger.write(message + "\r\n");
+								messenger.flush();
+							}
 						}
+					} else if (message.startsWith("logout")) {
+						
 					}
 				}
 			}

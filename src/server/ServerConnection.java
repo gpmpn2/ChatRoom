@@ -55,7 +55,8 @@ public class ServerConnection implements Runnable {
 			return;
 		}
 		
-		command = values[0];
+		command = message = values[0];
+		
 		for(int i = 1;i < values.length; i++) {
 			message = message.concat((i == 1 ? "" : " ") + values[i]);
 		}
