@@ -58,7 +58,7 @@ public class ServerConnection implements Runnable {
 		command = message = values[0];
 		
 		for(int i = 1;i < values.length; i++) {
-			message = message.concat((i == 1 ? "" : " ") + values[i]);
+			message = message.concat(" " + values[i]);
 		}
 		
 		if (!checkCommand(command)) {
@@ -66,16 +66,9 @@ public class ServerConnection implements Runnable {
 			return;
 		}
 		
-		switch(command) {
-		case "send":
-			synchronized (getMessagesToSend()) {
-				hasMessageToLoad = true;
-				getMessagesToSend().push(message);
-			}
-			return;
-		case "logout":
-			//TODO
-			return;
+		synchronized (getMessagesToSend()) {
+			hasMessageToLoad = true;
+			getMessagesToSend().push(message);
 		}
 	}
 	
@@ -83,6 +76,7 @@ public class ServerConnection implements Runnable {
 		switch (command) {
 		case "send":
 		case "logout":
+		case "user":
 			return true;
 			default:
 				return false;
@@ -102,6 +96,9 @@ public class ServerConnection implements Runnable {
 			PrintWriter outputLocation = new PrintWriter(getSocket().getOutputStream(), false);
 			InputStream inputLocation = getSocket().getInputStream();
 			scanner = new Scanner(inputLocation);
+			
+			outputLocation.println("user " + getUserName());
+			outputLocation.flush();
 			
 			while(!getSocket().isClosed()) {
 				if (inputLocation.available() > 0) {

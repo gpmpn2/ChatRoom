@@ -98,10 +98,6 @@ public class Client {
 			System.out.println("Establishing Connection...");
 			Thread.sleep(1000);
 			
-			PrintWriter outputLocation = new PrintWriter(socket.getOutputStream(), false);
-			outputLocation.println("user " + getUserName());
-			outputLocation.flush();
-			
 			ServerConnection serverConnection = new ServerConnection(socket, getUserName());
 			Thread thread = new Thread(serverConnection);
 			thread.start();
