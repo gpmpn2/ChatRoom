@@ -26,9 +26,13 @@ public class Server {
 	public static ArrayList<Member> members = new ArrayList<>();
 	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
 	
+	/**
+	 * Main method, started upon opening the jar
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		Server chatRoom = new Server();
-		chatRoom.loadMembers();
+		chatRoom.loadMembers();//Load all existing saved members
 		
 		try {
 			chatRoom.bootUp();
@@ -38,6 +42,10 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * Boots up our main server listener. Constantly listening for connections to the main socket (coming from the clients)
+	 * @throws IOException
+	 */
 	private void bootUp() throws IOException {
 		System.out.println("Server booting up...");
 		ServerSocket mainSocket = new ServerSocket(PORT);
@@ -56,6 +64,9 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * Loads in all existing members from a file on the Desktop
+	 */
 	private void loadMembers() {
 		try {
 			File file = new File(System.getProperty("user.home") + "/Desktop/users.txt");
@@ -81,6 +92,10 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * Checks which members in the Chat Room are actually active
+	 * @return
+	 */
 	public static int activeMembers() {
 		int count = 0;
 		
@@ -93,6 +108,10 @@ public class Server {
 		return count;
 	}
 	
+	/**
+	 * Logs a message to the main Server
+	 * @param message
+	 */
 	public static void log(String message) {
 		LocalDateTime ldt = LocalDateTime.now();
 		String formattedDate = formatter.format(ldt);
