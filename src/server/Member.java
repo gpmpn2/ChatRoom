@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class User {
+public class Member {
 
 	private String username;
 	private String password;
@@ -18,14 +18,14 @@ public class User {
 		return this.password;
 	}
 	
-	public User(String username, String password) {
+	public Member(String username, String password) {
 		this.username = username;
 		this.password = password;
 	}
 	
 	public void save() {
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(new File("src/users.txt"), true));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(System.getProperty("user.home") + "/Desktop/users.txt"), true));
 			bw.write(getUsername() + "\t" + getPassword() + "\n");
 			bw.flush();
 			bw.close();

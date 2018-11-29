@@ -7,8 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import handlers.ServerHandler;
 
@@ -19,20 +21,14 @@ import handlers.ServerHandler;
  */
 public class Server {
 	private static final int PORT = 14188;
-	
 	private static final int MAX_CONNECTIONS = 3;
-	
-	private ArrayList<ServerHandler> clients;
-	
-	public static ArrayList<User> validUsers = new ArrayList<>();
-	
-	public ArrayList<ServerHandler> getClients() {
-		return this.clients;
-	}
+	public static ArrayList<ServerHandler> clients = new ArrayList<>();
+	public static ArrayList<Member> members = new ArrayList<>();
+	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
 	
 	public static void main(String[] args) {
-		loadAllUsers();
 		Server chatRoom = new Server();
+		chatRoom.loadMembers();
 		
 		try {
 			chatRoom.bootUp();
@@ -43,31 +39,39 @@ public class Server {
 	}
 	
 	private void bootUp() throws IOException {
-		clients = new ArrayList<>();
+		System.out.println("Server booting up...");
 		ServerSocket mainSocket = new ServerSocket(PORT);
 		System.out.println("Chat Room now listening on port: " + PORT);
 		
 		try {
 			while(true) {
-				ServerHandler connection = new ServerHandler(mainSocket.accept(), clients.size() + 1);
-				connection.start();
-				clients.add(connection);
+				if (clients.size() != MAX_CONNECTIONS) {
+					ServerHandler connection = new ServerHandler(mainSocket.accept());
+					connection.start();
+					clients.add(connection);
+				}
 			}
 		} finally {
 			mainSocket.close();
 		}
 	}
 	
-	private static void loadAllUsers() {
+	private void loadMembers() {
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(new File("src/users.txt")));
+			File file = new File(System.getProperty("user.home") + "/Desktop/users.txt");
+		
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			
+			BufferedReader br = new BufferedReader(new FileReader(file));
 			String len = "";
 			while((len = br.readLine()) != null) {
 				String values[] = len.split("\t");
-				validUsers.add(new User(values[0], values[1]));
+				members.add(new Member(values[0], values[1]));
 			}
 			br.close();
-			System.out.println("Found " + validUsers.size() + " users registered.");
+			System.out.println("Found " + members.size() + " members registered.");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -75,5 +79,23 @@ public class Server {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static int activeMembers() {
+		int count = 0;
+		
+		for(ServerHandler handler : clients) {
+			if (!handler.getUsername().equals("")) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
+	public static void log(String message) {
+		LocalDateTime ldt = LocalDateTime.now();
+		String formattedDate = formatter.format(ldt);
+		System.out.println("[" + formattedDate + "] " + message);
 	}
 }
